@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>test-app — 4 Tools</title>
+<style>
+  :root {
+    --bg: #f7f8fa;
+    --surface: #ffffff;
+    --surface-2: #f1f3f6;
+    --border: #e3e6eb;
+    --text: #1f2328;
+    --text-dim: #6a737d;
+    --accent: #2f6feb;
+    --accent-hover: #245bc5;
+    --danger: #d33a3a;
+    --success: #1f9d55;
+    --shadow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.05);
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    height: 100%;
+  }
+  body { display: flex; flex-direction: column; min-height: 100vh; }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 22px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  header h1 { margin: 0; font-size: 18px; font-weight: 600; }
+  header h1 span { color: var(--accent); }
+  header .meta { font-size: 12px; color: var(--text-dim); }
+
+  nav.tabs {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 22px;
+    display: flex; gap: 4px;
+    overflow-x: auto;
+  }
+  nav.tabs button {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-weight: 500;
+    transition: color .15s, border-color .15s;
+    white-space: nowrap;
+  }
+  nav.tabs button:hover { color: var(--text); }
+  nav.tabs button.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  main {
+    flex: 1;
+    padding: 24px;
+    max-width: 920px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .tool { display: none; }
+  .tool.active { display: block; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+  }
+  .card h2 { margin: 0 0 4px 0; font-size: 18px; }
+  .card .sub { color: var(--text-dim); font-size: 13px; margin-bottom: 16px; }
+
+  button.primary, button.ghost, button.danger {
+    font: inherit;
+    border-radius: 8px;
+    padding: 8px 14px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    transition: background .15s, border-color .15s, transform .05s;
+  }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  button.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+  button.ghost:hover { background: var(--surface-2); }
+  button.danger { color: var(--danger); border-color: var(--border); }
+  button.danger:hover { background: #fbeeee; }
+  button:active { transform: translateY(1px); }
+
+  textarea, input[type=text], input[type=number] {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font: inherit;
+    color: var(--text);
+    resize: vertical;
+  }
+  textarea:focus, input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(47,111,235,0.15); }
+
+  .toolbar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
+  .toolbar .spacer { flex: 1; }
+  .toolbar .hint { font-size: 12px; color: var(--text-dim); }
+
+  .row { display: flex; gap: 8px; align-items: center; }
+  .row > * { flex: 1; }
+  .row > button { flex: 0 0 auto; }
+
+  .calc-display {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    text-align: right;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  .calc-display .expr { color: var(--text-dim); font-size: 13px; min-height: 18px; word-break: break-all; }
+  .calc-display .val { font-size: 32px; font-weight: 600; word-break: break-all; }
+  .calc-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .calc-grid button {
+    padding: 14px 0;
+    font-size: 16px;
+    border-radius: 8px;
+  }
+  .calc-grid button.op { background: var(--surface-2); }
+  .calc-grid button.eq { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .calc-grid button.eq:hover { background: var(--accent-hover); }
+
+  ul.tasks { list-style: none; padding: 0; margin: 12px 0 0 0; }
+  ul.tasks li {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 6px;
+    background: var(--surface);
+  }
+  ul.tasks li.done .text { text-decoration: line-through; color: var(--text-dim); }
+  ul.tasks li .text { flex: 1; }
+  ul.tasks li button.del {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+  }
+  ul.tasks li button.del:hover { background: #fbeeee; color: var(--danger); }
+  ul.tasks li input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; }
+  .empty { color: var(--text-dim); font-style: italic; text-align: center; padding: 20px; }
+
+  .notes-list { max-height: 280px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; }
+  .notes-list .note-item {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 8px;
+  }
+  .notes-list .note-item:last-child { border-bottom: none; }
+  .notes-list .note-item:hover { background: var(--surface-2); }
+  .notes-list .note-item.active { background: #eaf2ff; }
+  .notes-list .note-item .title { font-weight: 500; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .notes-list .note-item .date { font-size: 11px; color: var(--text-dim); }
+
+  .stat { display: inline-block; padding: 2px 8px; background: var(--surface-2); border-radius: 10px; font-size: 12px; color: var(--text-dim); margin-left: 6px; }
+
+  footer { text-align: center; padding: 16px; color: var(--text-dim); font-size: 12px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>test-app <span>· 4 Tools</span></h1>
+  <div class="meta">Light-Mode · Single-File</div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button data-tab="editor" class="active">📝 Texteditor</button>
+  <button data-tab="notes">🗒️ Notizen</button>
+  <button data-tab="calc">🧮 Taschenrechner</button>
+  <button data-tab="tasks">✅ Aufgaben</button>
+</nav>
+
+<main>
+  <!-- TEXTEDITOR -->
+  <section class="tool active" id="tool-editor">
+    <div class="card">
+      <h2>Texteditor</h2>
+      <div class="sub">Freier Text mit Wortzähler · wird automatisch gespeichert.</div>
+      <div class="toolbar">
+        <button class="ghost" id="ed-copy">📋 Kopieren</button>
+        <button class="ghost" id="ed-download">⬇️ Download .txt</button>
+        <button class="danger" id="ed-clear">🗑️ Leeren</button>
+        <span class="spacer"></span>
+        <span class="hint"><span id="ed-words">0</span> Wörter · <span id="ed-chars">0</span> Zeichen</span>
+      </div>
+      <textarea id="ed-area" rows="16" placeholder="Hier schreiben…"></textarea>
+    </div>
+  </section>
+
+  <!-- NOTIZEN -->
+  <section class="tool" id="tool-notes">
+    <div class="card">
+      <h2>Notizen</h2>
+      <div class="sub">Mehrere Notizen · LocalStorage · durchsuchbar.</div>
+      <div class="row">
+        <input type="text" id="note-title" placeholder="Titel der neuen Notiz…" />
+        <button class="primary" id="note-new">＋ Neu</button>
+      </div>
+      <div class="notes-list" id="notes-list"></div>
+      <div class="row" style="margin-top: 8px;">
+        <textarea id="note-body" rows="10" placeholder="Inhalt der ausgewählten Notiz…"></textarea>
+      </div>
+      <div class="toolbar" style="margin-top: 12px;">
+        <button class="danger" id="note-del" disabled>🗑️ Löschen</button>
+        <span class="spacer"></span>
+        <span class="hint" id="note-status">Keine Notiz ausgewählt</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- TASCHENRECHNER -->
+  <section class="tool" id="tool-calc">
+    <div class="card">
+      <h2>Taschenrechner</h2>
+      <div class="sub">Grundrechenarten + Klammern · Tastatur wird unterstützt.</div>
+      <div class="calc-display">
+        <div class="expr" id="calc-expr">&nbsp;</div>
+        <div class="val" id="calc-val">0</div>
+      </div>
+      <div class="calc-grid" id="calc-grid">
+        <button class="ghost" data-k="C">C</button>
+        <button class="ghost" data-k="(">(</button>
+        <button class="ghost" data-k=")">)</button>
+        <button class="op" data-k="/">÷</button>
+        <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+        <button class="op" data-k="*">×</button>
+        <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+        <button class="op" data-k="-">−</button>
+        <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+        <button class="op" data-k="+">+</button>
+        <button data-k="0" style="grid-column: span 2;">0</button>
+        <button data-k=".">.</button>
+        <button class="eq" data-k="=">=</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- AUFGABEN -->
+  <section class="tool" id="tool-tasks">
+    <div class="card">
+      <h2>Aufgaben <span class="stat" id="tasks-stat">0 offen</span></h2>
+      <div class="sub">TODO-Liste mit Abhaken · bleibt im Browser gespeichert.</div>
+      <div class="row">
+        <input type="text" id="task-input" placeholder="Neue Aufgabe…" />
+        <button class="primary" id="task-add">＋ Hinzufügen</button>
+      </div>
+      <ul class="tasks" id="tasks-list"></ul>
+      <div id="tasks-empty" class="empty">Noch keine Aufgaben — fang oben an.</div>
+    </div>
+  </section>
+</main>
+
+<footer>test-app · gespeichert lokal in deinem Browser · v1.0</footer>
+
+<script>
+// ===== Tabs =====
+const tabButtons = document.querySelectorAll('#tabs button');
+const tools = document.querySelectorAll('.tool');
+tabButtons.forEach(btn => btn.addEventListener('click', () => {
+  tabButtons.forEach(b => b.classList.remove('active'));
+  tools.forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tool-' + btn.dataset.tab).classList.add('active');
+}));
+
+// ===== Utils =====
+const $ = id => document.getElementById(id);
+const ls = {
+  get: (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+
+// ===== Texteditor =====
+const ed = $('ed-area');
+const edLoaded = ls.get('editor.text', '');
+ed.value = edLoaded;
+function edUpdateStats() {
+  const t = ed.value;
+  const words = (t.trim().match(/\S+/g) || []).length;
+  $('ed-words').textContent = words;
+  $('ed-chars').textContent = t.length;
+}
+edUpdateStats();
+ed.addEventListener('input', () => { ls.set('editor.text', ed.value); edUpdateStats(); });
+$('ed-copy').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(ed.value); flash($('ed-copy'), '✓ Kopiert'); } catch { flash($('ed-copy'), '✗ Fehler'); }
+});
+$('ed-download').addEventListener('click', () => {
+  const blob = new Blob([ed.value], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'text-' + new Date().toISOString().slice(0,10) + '.txt';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+});
+$('ed-clear').addEventListener('click', () => {
+  if (!ed.value || confirm('Wirklich alles löschen?')) { ed.value = ''; ls.set('editor.text', ''); edUpdateStats(); }
+});
+
+// ===== Notizen =====
+const NOTES_KEY = 'notes.list';
+let notes = ls.get(NOTES_KEY, []);
+let activeNoteId = null;
+function renderNotes() {
+  const list = $('notes-list');
+  list.innerHTML = '';
+  if (!notes.length) {
+    list.innerHTML = '<div class="empty">Noch keine Notizen — leg oben eine an.</div>';
+    $('note-del').disabled = true;
+    $('note-status').textContent = 'Keine Notiz ausgewählt';
+    return;
+  }
+  notes.sort((a, b) => b.updated - a.updated).forEach(n => {
+    const div = document.createElement('div');
+    div.className = 'note-item' + (n.id === activeNoteId ? ' active' : '');
+    div.innerHTML = `<span class="title"></span><span class="date"></span>`;
+    div.querySelector('.title').textContent = n.title || '(ohne Titel)';
+    div.querySelector('.date').textContent = new Date(n.updated).toLocaleString('de-DE');
+    div.addEventListener('click', () => { activeNoteId = n.id; $('note-title').value = n.title; $('note-body').value = n.body; renderNotes(); });
+    list.appendChild(div);
+  });
+  $('note-del').disabled = !activeNoteId;
+  $('note-status').textContent = activeNoteId ? 'Ausgewählt: ' + (notes.find(n => n.id === activeNoteId)?.title || '') : 'Keine Notiz ausgewählt';
+}
+$('note-new').addEventListener('click', () => {
+  const title = ($('note-title').value || 'Neue Notiz').trim();
+  const id = 'n_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+  notes.push({ id, title, body: '', updated: Date.now() });
+  activeNoteId = id;
+  $('note-body').value = '';
+  ls.set(NOTES_KEY, notes);
+  renderNotes();
+});
+function saveActiveNote() {
+  if (!activeNoteId) return;
+  const n = notes.find(x => x.id === activeNoteId);
+  if (!n) return;
+  n.title = $('note-title').value.trim() || '(ohne Titel)';
+  n.body = $('note-body').value;
+  n.updated = Date.now();
+  ls.set(NOTES_KEY, notes);
+  renderNotes();
+}
+$('note-title').addEventListener('input', saveActiveNote);
+$('note-body').addEventListener('input', saveActiveNote);
+$('note-del').addEventListener('click', () => {
+  if (!activeNoteId) return;
+  if (!confirm('Notiz wirklich löschen?')) return;
+  notes = notes.filter(n => n.id !== activeNoteId);
+  activeNoteId = null;
+  $('note-title').value = ''; $('note-body').value = '';
+  ls.set(NOTES_KEY, notes);
+  renderNotes();
+});
+renderNotes();
+
+// ===== Taschenrechner =====
+let calcExpr = '';
+const calcExprEl = $('calc-expr'), calcValEl = $('calc-val');
+function calcRender() {
+  calcExprEl.textContent = calcExpr || '\u00A0';
+  calcValEl.textContent = calcPreview();
+}
+function calcPreview() {
+  if (!calcExpr) return '0';
+  const safe = calcExpr.replace(/[^0-9+\-*/().,\s]/g, '');
+  if (!safe.trim()) return '0';
+  try {
+    const r = Function('"use strict"; return (' + safe + ')')();
+    if (typeof r === 'number' && isFinite(r)) {
+      return (Math.abs(r) < 1e-10 ? 0 : r).toString().slice(0, 16);
+    }
+    return '—';
+  } catch { return '…'; }
+}
+function calcEval() {
+  const safe = calcExpr.replace(/[^0-9+\-*/().,\s]/g, '');
+  try {
+    const r = Function('"use strict"; return (' + safe + ')')();
+    if (typeof r === 'number' && isFinite(r)) {
+      calcExpr = String(r);
+      calcRender();
+      return true;
+    }
+  } catch {}
+  return false;
+}
+document.querySelectorAll('#calc-grid button').forEach(b => {
+  b.addEventListener('click', () => {
+    const k = b.dataset.k;
+    if (k === 'C') { calcExpr = ''; calcRender(); return; }
+    if (k === '=') { calcEval(); return; }
+    if (k === '(' || k === ')') { calcExpr += k; calcRender(); return; }
+    if (/[+\-*/.]/.test(k)) {
+      if (!calcExpr && (k === '-' || k === '+')) { calcExpr = k; calcRender(); return; }
+      if (/[+\-*/.]$/.test(calcExpr) && /[+\-*/.]/.test(k)) {
+        calcExpr = calcExpr.slice(0, -1) + k;
+      } else {
+        calcExpr += k;
+      }
+      calcRender();
+      return;
+    }
+    calcExpr += k;
+    calcRender();
+  });
+});
+document.addEventListener('keydown', (e) => {
+  if (!document.getElementById('tool-calc').classList.contains('active')) return;
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = e.key;
+  if (/^[0-9]$/.test(k)) { calcExpr += k; calcRender(); e.preventDefault(); }
+  else if (['+', '-', '*', '/', '(', ')', '.'].includes(k)) { calcExpr += k; calcRender(); e.preventDefault(); }
+  else if (k === 'Enter' || k === '=') { calcEval(); e.preventDefault(); }
+  else if (k === 'Backspace') { calcExpr = calcExpr.slice(0, -1); calcRender(); e.preventDefault(); }
+  else if (k === 'Escape' || k === 'c' || k === 'C') { calcExpr = ''; calcRender(); e.preventDefault(); }
+});
+calcRender();
+
+// ===== Aufgaben =====
+const TASKS_KEY = 'tasks.list';
+let tasks = ls.get(TASKS_KEY, []);
+function renderTasks() {
+  const ul = $('tasks-list');
+  ul.innerHTML = '';
+  const open = tasks.filter(t => !t.done).length;
+  $('tasks-stat').textContent = open + ' offen';
+  $('tasks-empty').style.display = tasks.length ? 'none' : 'block';
+  tasks.forEach((t, i) => {
+    const li = document.createElement('li');
+    li.className = t.done ? 'done' : '';
+    li.innerHTML = '<input type="checkbox" /><span class="text"></span><button class="del" title="Löschen">✕</button>';
+    const cb = li.querySelector('input');
+    cb.checked = !!t.done;
+    cb.addEventListener('change', () => { t.done = cb.checked; ls.set(TASKS_KEY, tasks); renderTasks(); });
+    li.querySelector('.text').textContent = t.text;
+    li.querySelector('.del').addEventListener('click', () => {
+      tasks.splice(i, 1); ls.set(TASKS_KEY, tasks); renderTasks();
+    });
+    ul.appendChild(li);
+  });
+}
+function addTask() {
+  const input = $('task-input');
+  const txt = input.value.trim();
+  if (!txt) return;
+  tasks.push({ text: txt, done: false, created: Date.now() });
+  input.value = '';
+  ls.set(TASKS_KEY, tasks);
+  renderTasks();
+  input.focus();
+}
+$('task-add').addEventListener('click', addTask);
+$('task-input').addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
+renderTasks();
+
+// ===== Helper =====
+function flash(btn, msg) {
+  const old = btn.textContent;
+  btn.textContent = msg;
+  btn.disabled = true;
+  setTimeout(() => { btn.textContent = old; btn.disabled = false; }, 900);
+}
+</script>
+</body>
+</html>
